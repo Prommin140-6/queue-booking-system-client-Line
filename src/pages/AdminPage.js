@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Button, Card, Col, Input, Row, Statistic, Table, Tag, Tooltip, Space, Modal, message } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, ExclamationCircleOutlined, SearchOutlined, CalendarOutlined, HomeOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Input, Row, Statistic, Table, Tag, Tooltip, Space, Modal, message, Select } from 'antd';
+import { CheckCircleOutlined, CloseCircleOutlined, DeleteOutlined, ExclamationCircleOutlined, SearchOutlined, CalendarOutlined, HomeOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './AdminPage.css';
 
 const { confirm } = Modal;
+const { Option } = Select;
 
 const AdminPage = () => {
   const [bookings, setBookings] = useState([]);
@@ -17,12 +18,33 @@ const AdminPage = () => {
   const [searchText, setSearchText] = useState('');
   const [filterDate, setFilterDate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isRescheduleModalVisible, setIsRescheduleModalVisible] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+  const [newDate, setNewDate] = useState(new Date());
+  const [newTime, setNewTime] = useState('');
   const navigate = useNavigate();
+
+  // ช่องเวลาที่กำหนดไว้
+  const timeSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 
   const formatDateToLocal = (date) => {
     const d = new Date(date);
     if (isNaN(d.getTime())) return 'Invalid Date';
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const getAvailableTimeSlots = (selectedDate, currentBookingId) => {
+    const selectedDateStr = formatDateToLocal(selectedDate);
+    // กรองการจองในวันที่เลือก (ยกเว้นการจองที่กำลังแก้ไข)
+    const bookingsOnDate = bookings.filter(
+      (b) => formatDateToLocal(b.date) === selectedDateStr && b._id !== currentBookingId && b.status === 'accepted'
+    );
+    const bookedTimes = bookingsOnDate.map((b) => b.time);
+    // คืนค่ารายการเวลาทั้งหมดพร้อมสถานะว่าง/ไม่ว่าง
+    return timeSlots.map((time) => ({
+      time,
+      available: !bookedTimes.includes(time),
+    }));
   };
 
   const filterBookings = (search, date, initialBookings = bookings) => {
@@ -47,6 +69,21 @@ const AdminPage = () => {
     }
     setPendingBookings(filtered.filter((b) => b.status === 'pending'));
     setAcceptedBookings(filtered.filter((b) => b.status === 'accepted'));
+  };
+
+  const fetchBookings = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const bookingsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const allBookings = bookingsRes.data;
+      setBookings(allBookings);
+      filterBookings(searchText, filterDate, allBookings);
+      return allBookings;
+    } catch (error) {
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -97,11 +134,7 @@ const AdminPage = () => {
         { status },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const updatedBookings = bookings.map((booking) =>
-        booking._id === id ? { ...booking, status } : booking
-      );
-      setBookings(updatedBookings);
-      filterBookings(searchText, filterDate, updatedBookings);
+      await fetchBookings();
       message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
@@ -131,9 +164,7 @@ const AdminPage = () => {
           await axios.delete(`${process.env.REACT_APP_API_URL}/api/bookings/${id}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          const updatedBookings = bookings.filter((b) => b._id !== id);
-          setBookings(updatedBookings);
-          filterBookings(searchText, filterDate, updatedBookings);
+          await fetchBookings();
           message.success('ลบการจองเรียบร้อย');
         } catch (error) {
           const errorMessage = error.response?.data?.message || error.message;
@@ -149,6 +180,50 @@ const AdminPage = () => {
         }
       },
     });
+  };
+
+  const handleReschedule = async () => {
+    if (!newDate || !newTime) {
+      message.error('กรุณาเลือกวันที่และเวลาใหม่');
+      return;
+    }
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formattedDate = formatDateToLocal(newDate);
+      const response = await axios.patch(
+        `${process.env.REACT_APP_API_URL}/api/bookings/${selectedBookingId}`,
+        { date: formattedDate, time: newTime, status: 'accepted' },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data && response.data.booking) {
+        await fetchBookings();
+        message.success('เลื่อนเวลาการจองเรียบร้อย');
+        setIsRescheduleModalVisible(false);
+        setNewDate(new Date());
+        setNewTime('');
+        setSelectedBookingId(null);
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message;
+      message.error(`ไม่สามารถเลื่อนเวลาการจองได้: ${errorMessage}`);
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+        navigate('/admin/login');
+      }
+      console.error('Error rescheduling booking:', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showRescheduleModal = (id) => {
+    setSelectedBookingId(id);
+    setNewTime('');
+    setIsRescheduleModalVisible(true);
   };
 
   const handleSearch = (e) => {
@@ -234,7 +309,7 @@ const AdminPage = () => {
       title: 'จัดการ',
       key: 'action',
       fixed: 'right',
-      width: 200,
+      width: 250,
       render: (_, record) => (
         <Space>
           {record.status === 'pending' && (
@@ -246,7 +321,7 @@ const AdminPage = () => {
                   onClick={() => handleStatusUpdate(record._id, 'accepted')}
                   loading={loading}
                 >
-                  Confirm
+                  ยืนยันการจอง
                 </Button>
               </Tooltip>
               <Tooltip title="ปฏิเสธการจอง">
@@ -256,22 +331,34 @@ const AdminPage = () => {
                   onClick={() => handleStatusUpdate(record._id, 'rejected')}
                   loading={loading}
                 >
-                  Reject
+                  ปฏิเสธ
                 </Button>
               </Tooltip>
             </>
           )}
           {record.status === 'accepted' && (
-            <Tooltip title="ลบการจอง">
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleDelete(record._id)}
-                loading={loading}
-              >
-                Delete
-              </Button>
-            </Tooltip>
+            <>
+              <Tooltip title="เลื่อนเวลา">
+                <Button
+                  type="default"
+                  icon={<ClockCircleOutlined />}
+                  onClick={() => showRescheduleModal(record._id)}
+                  loading={loading}
+                >
+                  เลื่อนการจอง
+                </Button>
+              </Tooltip>
+              <Tooltip title="ลบการจอง">
+                <Button
+                  danger
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleDelete(record._id)}
+                  loading={loading}
+                >
+                  ยกเลิกนัด
+                </Button>
+              </Tooltip>
+            </>
           )}
           {record.status === 'rejected' && <Tag color="red">Rejected</Tag>}
         </Space>
@@ -380,6 +467,53 @@ const AdminPage = () => {
           size="middle"
         />
       </div>
+
+      <Modal
+        title="เลื่อนเวลาการจอง"
+        visible={isRescheduleModalVisible}
+        onOk={handleReschedule}
+        onCancel={() => {
+          setIsRescheduleModalVisible(false);
+          setNewDate(new Date());
+          setNewTime('');
+          setSelectedBookingId(null);
+        }}
+        okText="บันทึก"
+        cancelText="ยกเลิก"
+        confirmLoading={loading}
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block mb-1 font-semibold">วันที่ใหม่:</label>
+            <DatePicker
+              selected={newDate}
+              onChange={(date) => {
+                setNewDate(date);
+                setNewTime('');
+              }}
+              dateFormat="yyyy-MM-dd"
+              className="w-full rounded-lg border border-gray-300 p-2"
+              minDate={new Date()}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">เวลาใหม่:</label>
+            <Select
+              value={newTime}
+              onChange={(value) => setNewTime(value)}
+              placeholder="เลือกเวลา"
+              className="w-full"
+              disabled={!newDate}
+            >
+              {getAvailableTimeSlots(newDate, selectedBookingId).map(({ time, available }) => (
+                <Option key={time} value={time} disabled={!available}>
+                  {time} {available ? '' : '(ถูกจอง)'}
+                </Option>
+              ))}
+            </Select>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

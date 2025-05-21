@@ -5,6 +5,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
+import logo from './ถึงแก่นLOGO.png';
 
 const BookingPage = () => {
   const [form] = Form.useForm();
@@ -171,6 +172,14 @@ const BookingPage = () => {
         <h1 className="text-3xl font-bold uppercase text-center mb-6 tracking-wide" style={{ color: '#CD9969' }}>
           นัดหมายล้างรถ
         </h1>
+        <div className="flex justify-center mb-6">
+        <img
+          src={logo} 
+          alt="ถึงแก่น logo"
+          className="w-48 h-auto"
+          style={{ maxWidth: '100%' }}
+        />
+        </div>
         <Form form={form} onFinish={onFinish} layout="vertical">
           <div className="mb-6">
             <label className="text-gray-400 font-semibold block mb-2 uppercase tracking-wider">วันที่</label>
