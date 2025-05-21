@@ -13,11 +13,13 @@ const BookingPage = () => {
   const [timeError, setTimeError] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateOffset, setDateOffset] = useState(0);
+  const [timeOffset, setTimeOffset] = useState(0);
   const [bookedTimes, setBookedTimes] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const today = new Date();
   const datesPerPage = 5;
+  const timesPerPage = 5;
 
   const availableDates = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(today);
@@ -25,7 +27,7 @@ const BookingPage = () => {
     return date;
   });
 
-  const availableTimes = ['10:00', '11:00', '13:00'];
+  const availableTimes = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00'];
 
   const fetchBookedTimes = async (date) => {
     try {
@@ -66,7 +68,7 @@ const BookingPage = () => {
         date: selectedDate.toISOString().slice(0, 10),
         time: selectedTime,
       };
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/bookings`, bookingData);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/bookings`, bookingData);
       Swal.fire({
         icon: 'success',
         title: 'จองคิวเรียบร้อยแล้ว',
@@ -79,6 +81,7 @@ const BookingPage = () => {
       setTimeError('');
       setShowDatePicker(false);
       setDateOffset(0);
+      setTimeOffset(0);
       await fetchBookedTimes(new Date());
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
@@ -136,6 +139,21 @@ const BookingPage = () => {
     setDateOffset(dateOffset + datesPerPage);
   };
 
+  const handlePrevTimes = () => {
+    if (timeOffset > 0) {
+      setTimeOffset(timeOffset - timesPerPage);
+    }
+  };
+
+  const handleNextTimes = () => {
+    const maxOffset = Math.max(0, availableTimes.length - timesPerPage);
+    if (timeOffset < maxOffset) {
+      setTimeOffset(timeOffset + timesPerPage);
+    }
+  };
+
+  const visibleTimes = availableTimes.slice(timeOffset, timeOffset + timesPerPage);
+
   const validatePhoneNumber = (_, value) => {
     if (!value) {
       return Promise.reject(new Error('กรุณากรอกเบอร์โทร'));
@@ -192,7 +210,7 @@ const BookingPage = () => {
             <div className="mt-4">
               <Button
                 onClick={() => setShowDatePicker(true)}
-                className="text-[#CD9969] hover:text-[#b3894f] underline text-sm font-semibold"
+                className="rounded-lg bg-[#443833] hover:bg-[#5c4739] text-[#CD9969] border border-[#896253] px-4 py-2 text-sm font-semibold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-300"
               >
                 เลือกวันที่อื่น
               </Button>
@@ -214,27 +232,41 @@ const BookingPage = () => {
 
           <div className="mb-6">
             <label className="text-gray-400 font-semibold block mb-2 uppercase tracking-wider">เวลา</label>
-            <div className="flex space-x-4">
-              {availableTimes.map((time) => {
-                const isBooked = bookedTimes.includes(time);
-                return (
-                  <div key={time} className="flex flex-col items-center">
-                    <Button
-                      type={selectedTime === time ? 'primary' : 'default'}
-                      onClick={() => handleTimeChange(time)}
-                      disabled={isBooked}
-                      style={isBooked ? { backgroundColor: '#9CA3AF', color: '#FFFFFF', cursor: 'not-allowed' } : {}}
-                      className={`rounded-full px-6 py-2 shadow-lg transition-all duration-300 ${selectedTime === time
-                        ? 'bg-gradient-to-br from-[#CD9969] to-[#896253] text-black ring-2 ring-[#896253]'
-                        : 'bg-[#443833] hover:bg-[#5c4739] text-[#CD9969]'
-                        }`}
-                    >
-                      <span className="font-bold uppercase tracking-wide">{time}</span>
-                    </Button>
-                    {isBooked && <span className="text-gray-400 text-xs mt-1">เต็ม</span>}
-                  </div>
-                );
-              })}
+            <div className="flex items-center bg-[#2a2a2a] rounded-xl p-3 shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
+              <Button
+                icon={<LeftOutlined />}
+                onClick={handlePrevTimes}
+                disabled={timeOffset === 0}
+                className="rounded-full bg-[#443833] hover:bg-[#5c4739] text-white w-10 h-10 flex items-center justify-center transition-all duration-300"
+              />
+              <div className="flex space-x-4 overflow-x-auto mx-2 flex-1">
+                {visibleTimes.map((time) => {
+                  const isBooked = bookedTimes.includes(time);
+                  return (
+                    <div key={time} className="flex flex-col items-center">
+                      <Button
+                        type={selectedTime === time ? 'primary' : 'default'}
+                        onClick={() => handleTimeChange(time)}
+                        disabled={isBooked}
+                        style={isBooked ? { backgroundColor: '#9CA3AF', color: '#FFFFFF', cursor: 'not-allowed' } : {}}
+                        className={`rounded-full px-6 py-2 shadow-lg transition-all duration-300 ${selectedTime === time
+                          ? 'bg-gradient-to-br from-[#CD9969] to-[#896253] text-black ring-2 ring-[#896253]'
+                          : 'bg-[#443833] hover:bg-[#5c4739] text-[#CD9969]'
+                          }`}
+                      >
+                        <span className="font-bold uppercase tracking-wide">{time}</span>
+                      </Button>
+                      {isBooked && <span className="text-gray-400 text-xs mt-1">เต็ม</span>}
+                    </div>
+                  );
+                })}
+              </div>
+              <Button
+                icon={<RightOutlined />}
+                onClick={handleNextTimes}
+                disabled={timeOffset + timesPerPage >= availableTimes.length}
+                className="rounded-full bg-[#443833] hover:bg-[#5c4739] text-white w-10 h-10 flex items-center justify-center transition-all duration-300"
+              />
             </div>
             {timeError && (
               <p className="mt-2 text-red-400 whitespace-pre-line text-sm font-medium">{timeError}</p>
@@ -257,7 +289,7 @@ const BookingPage = () => {
             label={<span className="text-gray-400 font-semibold uppercase tracking-wider">เบอร์โทร</span>}
             rules={[
               { required: true, message: 'กรุณากรอกเบอร์โทร' },
-              { validator: validatePhoneNumber }
+              { validator: validatePhoneNumber },
             ]}
           >
             <Input

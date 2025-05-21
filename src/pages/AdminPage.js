@@ -12,12 +12,11 @@ const { confirm } = Modal;
 const AdminPage = () => {
   const [bookings, setBookings] = useState([]);
   const [pendingBookings, setPendingBookings] = useState([]);
-  const [acceptedBookings, setAcceptedBookings] = useState([]); // เปลี่ยนจาก confirmedBookings เป็น acceptedBookings
+  const [acceptedBookings, setAcceptedBookings] = useState([]);
   const [summary, setSummary] = useState({});
   const [searchText, setSearchText] = useState('');
   const [filterDate, setFilterDate] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
 
   const formatDateToLocal = (date) => {
@@ -29,7 +28,7 @@ const AdminPage = () => {
   const filterBookings = (search, date, initialBookings = bookings) => {
     let filtered = [...initialBookings];
     if (search) {
-      filtered = filtered.filter(b =>
+      filtered = filtered.filter((b) =>
         b.name.toLowerCase().includes(search.toLowerCase()) ||
         b.phone.includes(search) ||
         b.carModel.toLowerCase().includes(search.toLowerCase()) ||
@@ -38,7 +37,7 @@ const AdminPage = () => {
     }
     if (date) {
       const filterDateStr = formatDateToLocal(date);
-      filtered = filtered.filter(b => {
+      filtered = filtered.filter((b) => {
         let bookingDate = new Date(b.date);
         if (isNaN(bookingDate.getTime())) {
           bookingDate = new Date(b.date.split('T')[0]);
@@ -46,8 +45,8 @@ const AdminPage = () => {
         return formatDateToLocal(bookingDate) === filterDateStr;
       });
     }
-    setPendingBookings(filtered.filter(b => b.status === 'pending'));
-    setAcceptedBookings(filtered.filter(b => b.status === 'accepted')); // เปลี่ยนจาก confirmed เป็น accepted
+    setPendingBookings(filtered.filter((b) => b.status === 'pending'));
+    setAcceptedBookings(filtered.filter((b) => b.status === 'accepted'));
   };
 
   useEffect(() => {
@@ -62,14 +61,10 @@ const AdminPage = () => {
       setLoading(true);
       try {
         const bookingsRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` },
         });
         const summaryRes = await axios.get(`${process.env.REACT_APP_API_URL}/api/bookings/summary`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+          headers: { Authorization: `Bearer ${token}` },
         });
 
         const allBookings = bookingsRes.data;
@@ -95,24 +90,14 @@ const AdminPage = () => {
 
   const handleStatusUpdate = async (id, status) => {
     setLoading(true);
-    console.log('Sending PATCH request:', {
-      url: `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
-      body: { status },
-      token: localStorage.getItem('token')
-    });
     try {
       const token = localStorage.getItem('token');
       const response = await axios.patch(
         `${process.env.REACT_APP_API_URL}/api/bookings/${id}`,
         { status },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      console.log('PATCH response:', response.data);
-      const updatedBookings = bookings.map(booking =>
+      const updatedBookings = bookings.map((booking) =>
         booking._id === id ? { ...booking, status } : booking
       );
       setBookings(updatedBookings);
@@ -120,17 +105,13 @@ const AdminPage = () => {
       message.success(`เปลี่ยนสถานะเป็น '${status}' เรียบร้อย`);
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message;
-      console.error('Error updating status:', {
-        response: error.response?.data,
-        status: error.response?.status,
-        message: errorMessage
-      });
       message.error(`ไม่สามารถเปลี่ยนสถานะเป็น '${status}' ได้: ${errorMessage}`);
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
         message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
         navigate('/admin/login');
       }
+      console.error('Error updating status:', error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -148,27 +129,25 @@ const AdminPage = () => {
         try {
           const token = localStorage.getItem('token');
           await axios.delete(`${process.env.REACT_APP_API_URL}/api/bookings/${id}`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+            headers: { Authorization: `Bearer ${token}` },
           });
-          const updatedBookings = bookings.filter(b => b._id !== id);
+          const updatedBookings = bookings.filter((b) => b._id !== id);
           setBookings(updatedBookings);
           filterBookings(searchText, filterDate, updatedBookings);
           message.success('ลบการจองเรียบร้อย');
         } catch (error) {
           const errorMessage = error.response?.data?.message || error.message;
           message.error(`ไม่สามารถลบการจองได้: ${errorMessage}`);
-          console.error('Error deleting booking:', error.response?.data || error.message);
           if (error.response?.status === 401) {
             localStorage.removeItem('token');
             message.error('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
             navigate('/admin/login');
           }
+          console.error('Error deleting booking:', error.response?.data || error.message);
         } finally {
           setLoading(false);
         }
-      }
+      },
     });
   };
 
@@ -208,7 +187,7 @@ const AdminPage = () => {
       dataIndex: 'licensePlate',
       key: 'licensePlate',
       width: 120,
-      render: (text) => <Tag color="blue">{text.toUpperCase()}</Tag>
+      render: (text) => <Tag color="blue">{text.toUpperCase()}</Tag>,
     },
     {
       title: 'วันที่จอง',
@@ -216,7 +195,7 @@ const AdminPage = () => {
       key: 'date',
       width: 120,
       render: (text) => formatDateToLocal(text),
-      sorter: (a, b) => new Date(a.date) - new Date(b.date)
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
     },
     {
       title: 'เวลา',
@@ -249,7 +228,7 @@ const AdminPage = () => {
             color = 'default';
         }
         return <Tag icon={icon} color={color}>{status.toUpperCase()}</Tag>;
-      }
+      },
     },
     {
       title: 'จัดการ',
@@ -283,25 +262,21 @@ const AdminPage = () => {
             </>
           )}
           {record.status === 'accepted' && (
-            <>
-              <Tooltip title="ลบการจอง">
-                <Button
-                  danger
-                  icon={<DeleteOutlined />}
-                  onClick={() => handleDelete(record._id)}
-                  loading={loading}
-                >
-                  Delete
-                </Button>
-              </Tooltip>
-            </>
+            <Tooltip title="ลบการจอง">
+              <Button
+                danger
+                icon={<DeleteOutlined />}
+                onClick={() => handleDelete(record._id)}
+                loading={loading}
+              >
+                Delete
+              </Button>
+            </Tooltip>
           )}
-          {record.status === 'rejected' && (
-            <Tag color="red">Rejected</Tag>
-          )}
+          {record.status === 'rejected' && <Tag color="red">Rejected</Tag>}
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -348,9 +323,7 @@ const AdminPage = () => {
           <Card hoverable bordered={false} className="rounded-lg shadow-lg">
             <Statistic
               title="ยืนยันแล้ว"
-              value={
-                summary.statusBreakdown?.find(s => s._id === 'accepted')?.count || 0
-              }
+              value={summary.statusBreakdown?.find((s) => s._id === 'accepted')?.count || 0}
               valueStyle={{ color: '#108ee9', fontWeight: 'bold' }}
             />
           </Card>
@@ -374,8 +347,7 @@ const AdminPage = () => {
             onChange={handleDateFilter}
             dateFormat="yyyy-MM-dd"
             placeholderText="กรองวันที่จอง"
-            className="react-datepicker__input-container"
-            wrapperClassName="react-datepicker-wrapper"
+            className="w-full rounded-lg border border-gray-300 p-2"
             isClearable
           />
         </Col>
