@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Form, Input, message, Modal } from 'antd';
+import { Button, Form, Input, message } from 'antd';
 import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { LeftOutlined, RightOutlined, CameraOutlined } from '@ant-design/icons';
+import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
-import logo from './ถึงแก่นLOGO.png';
-import './BookingPage.css';
 
 const BookingPage = () => {
   const [form] = Form.useForm();
@@ -18,8 +16,6 @@ const BookingPage = () => {
   const [timeOffset, setTimeOffset] = useState(0);
   const [bookedTimes, setBookedTimes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isConfirmationModalVisible, setIsConfirmationModalVisible] = useState(false);
-  const [bookingDetails, setBookingDetails] = useState(null);
 
   const today = new Date();
   const datesPerPage = 5;
@@ -73,17 +69,12 @@ const BookingPage = () => {
         time: selectedTime,
       };
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/bookings`, bookingData);
-      setBookingDetails({
-        ...bookingData,
-        status: 'รอการยืนยันจากแอดมิน',
-      });
-      await Swal.fire({
+      Swal.fire({
         icon: 'success',
         title: 'จองคิวเรียบร้อยแล้ว',
         text: 'กรุณารอการติดต่อกลับจากทางร้าน',
         confirmButtonColor: '#CD9969',
       });
-      setIsConfirmationModalVisible(true);
       form.resetFields();
       setSelectedDate(new Date());
       setSelectedTime(null);
@@ -174,25 +165,12 @@ const BookingPage = () => {
     return Promise.resolve();
   };
 
-  const handleModalClose = () => {
-    setIsConfirmationModalVisible(false);
-    setBookingDetails(null);
-  };
-
   return (
     <div className="min-h-screen bg-[#121212] text-white p-6 flex items-center justify-center">
       <div className="w-full max-w-md bg-[#1f1f1f] rounded-xl shadow-2xl p-8 border border-[#896253]">
         <h1 className="text-3xl font-bold uppercase text-center mb-6 tracking-wide" style={{ color: '#CD9969' }}>
           นัดหมายล้างรถ
         </h1>
-        <div className="flex justify-center mb-6">
-          <img
-            src={logo}
-            alt="ถึงแก่น logo"
-            className="w-48 h-auto"
-            style={{ maxWidth: '100%' }}
-          />
-        </div>
         <Form form={form} onFinish={onFinish} layout="vertical">
           <div className="mb-6">
             <label className="text-gray-400 font-semibold block mb-2 uppercase tracking-wider">วันที่</label>
@@ -211,11 +189,10 @@ const BookingPage = () => {
                     <Button
                       key={date.toISOString()}
                       onClick={() => handleDateChange(date)}
-                      className={`rounded-lg w-16 h-20 flex flex-col items-center justify-center transition-all duration-300 ${
-                        isSelected
-                          ? 'bg-gradient-to-br from-[#CD9969] to-[#896253] text-black ring-2 ring-[#CD9969] shadow-lg'
-                          : 'bg-[#443833] hover:bg-[#5c4739] text-[#CD9969]'
-                      }`}
+                      className={`rounded-lg w-16 h-20 flex flex-col items-center justify-center transition-all duration-300 ${isSelected
+                        ? 'bg-gradient-to-br from-[#CD9969] to-[#896253] text-black ring-2 ring-[#CD9969] shadow-lg'
+                        : 'bg-[#443833] hover:bg-[#5c4739] text-[#CD9969]'
+                        }`}
                     >
                       <span className="text-xs font-bold uppercase">{dayOfWeek}</span>
                       <span className="text-lg font-extrabold">{dayMonth.split(' ')[0]}</span>
@@ -272,11 +249,10 @@ const BookingPage = () => {
                         onClick={() => handleTimeChange(time)}
                         disabled={isBooked}
                         style={isBooked ? { backgroundColor: '#9CA3AF', color: '#FFFFFF', cursor: 'not-allowed' } : {}}
-                        className={`rounded-full px-6 py-2 shadow-lg transition-all duration-300 ${
-                          selectedTime === time
-                            ? 'bg-gradient-to-br from-[#CD9969] to-[#896253] text-black ring-2 ring-[#896253]'
-                            : 'bg-[#443833] hover:bg-[#5c4739] text-[#CD9969]'
-                        }`}
+                        className={`rounded-full px-6 py-2 shadow-lg transition-all duration-300 ${selectedTime === time
+                          ? 'bg-gradient-to-br from-[#CD9969] to-[#896253] text-black ring-2 ring-[#896253]'
+                          : 'bg-[#443833] hover:bg-[#5c4739] text-[#CD9969]'
+                          }`}
                       >
                         <span className="font-bold uppercase tracking-wide">{time}</span>
                       </Button>
@@ -314,7 +290,7 @@ const BookingPage = () => {
             rules={[{ required: true, message: 'กรุณากรอกเบอร์โทร' }, { validator: validatePhoneNumber }]}
           >
             <Input
-              placeholder="กรอกเบอร์โทร (เช่น 0826595365)"
+              placeholder="กรอกเบอร์โทร (เช่น 0812345678)"
               className="rounded-lg border border-[#896253] bg-[#2a2a2a] text-[#CD9969] focus:ring-2 focus:ring-[#CD9969] focus:border-[#CD9969] placeholder-[#8a7d5a]"
               maxLength={10}
             />
@@ -349,56 +325,32 @@ const BookingPage = () => {
               loading={loading}
               className="w-full rounded-lg bg-gradient-to-r from-[#CD9969] to-[#896253] text-black font-bold uppercase tracking-wide shadow-lg hover:from-[#b3894f] hover:to-[#735a42] transition-all duration-300 h-14"
             >
-              จองคิว
+              ส่งคำขอ
+            </Button>
+          </Form.Item>
+          <Form.Item>
+            <Button
+              href="/check-status"
+              className="w-full rounded-lg bg-[#443833] hover:bg-[#5c4739] text-[#CD9969] border border-[#896253] px-4 py-2 text-sm font-semibold uppercase tracking-wider shadow-md hover:shadow-lg transition-all duration-300"
+            >
+              ไปหน้าเช็คสถานะ
             </Button>
           </Form.Item>
         </Form>
-
-        <Modal
-          visible={isConfirmationModalVisible}
-          onCancel={handleModalClose}
-          footer={null}
-          className="confirmation-modal"
-          centered
-        >
-          <div className="flex flex-col items-center">
-            <img src={logo} alt="ถึงแก่น logo" className="w-24 h-auto mb-3" />
-            <h2 className="text-xl font-bold uppercase mb-3 tracking-wide">การจองคิวสำเร็จ!</h2>
-            {bookingDetails && (
-              <div className="w-full">
-                <div className="booking-details">
-                  <p><span className="font-semibold">ชื่อ:</span> {bookingDetails.name}</p>
-                  <p><span className="font-semibold">เบอร์โทร:</span> {bookingDetails.phone}</p>
-                  <p><span className="font-semibold">รุ่นรถ:</span> {bookingDetails.carModel}</p>
-                  <p><span className="font-semibold">หมายเลขทะเบียน:</span> {bookingDetails.licensePlate}</p>
-                  <p><span className="font-semibold">วันที่จอง:</span> {bookingDetails.date}</p>
-                  <p><span className="font-semibold">เวลา:</span> {bookingDetails.time}</p>
-                  <p><span className="font-semibold">สถานะ:</span> {bookingDetails.status}</p>
-                </div>
-                <div className="screenshot-notice flex items-center justify-center mt-3">
-                  <CameraOutlined className="mr-1" />
-                  <p>กรุณาแคปหน้าจอนี้เพื่อใช้เป็นหลักฐาน</p>
-                </div>
-                <div className="contact-info mt-3 text-center">
-                  <p>หากมีปัญหา กรุณาติดต่อที่:</p>
-                  <p>
-                    โทร: <a href="tel:0826595365" className="underline">082-659-5365</a> , <a href="tel:0636869999" className="underline">063-686-9999</a>
-                  </p>
-                  <p>LINE: <a href="https://line.me/R/ti/p/@259xpcyb?ts=01311345&oat_content=url" target="_blank" rel="noopener noreferrer" className="underline">@thuengkaen_th</a></p>
-                </div>
-              </div>
-            )}
-            <Button
-              onClick={handleModalClose}
-              className="mt-4 rounded-lg bg-gradient-to-r from-[#CD9969] to-[#896253] text-black font-bold uppercase tracking-wide shadow-lg hover:from-[#b3894f] hover:to-[#735a42] transition-all duration-300 h-10 w-full"
-            >
-              กลับสู่หน้าหลัก
-            </Button>
-          </div>
-        </Modal>
       </div>
     </div>
   );
+};
+
+const validatePhoneNumber = (_, value) => {
+  if (!value) {
+    return Promise.reject(new Error('กรุณากรอกเบอร์โทร'));
+  }
+  const phoneRegex = /^0[0-9]{9}$/;
+  if (!phoneRegex.test(value)) {
+    return Promise.reject(new Error('เบอร์โทรต้องมี 10 หลัก เริ่มต้นด้วย 0 และเป็นตัวเลขเท่านั้น'));
+  }
+  return Promise.resolve();
 };
 
 export default BookingPage;

@@ -43,12 +43,13 @@
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   max-width: 90%;
-  width: 300px; /* ความกว้างเริ่มต้น */
+  width: 300px;
   margin: 0 auto;
 }
 
 .confirmation-modal .ant-modal-body {
   padding: 16px;
+  color: #CD9969; /* ตั้งค่าสีเริ่มต้นสำหรับข้อความทั้งหมดใน Modal */
 }
 
 .confirmation-modal h2 {
@@ -57,21 +58,13 @@
   font-size: 1.25rem;
 }
 
-.confirmation-modal .booking-details {
-  background-color: #2a2a2a;
-  border: 1px solid #896253;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
+.confirmation-modal .maintenance-details p,
+.confirmation-modal .screenshot-notice,
+.confirmation-modal .contact-info {
+  color: #CD9969 !important; /* ใช้ !important เพื่อครอบทับสไตล์เริ่มต้น */
 }
 
-.confirmation-modal .booking-details p {
-  color: #CD9969;
-  margin: 6px 0;
-  font-size: 0.875rem; /* ลดขนาดฟอนต์ */
-}
-
-.confirmation-modal .booking-details p span {
+.confirmation-modal .maintenance-details p span {
   color: #8a7d5a;
 }
 
@@ -80,7 +73,6 @@
   border: 1px solid #CD9969;
   border-radius: 6px;
   padding: 8px;
-  color: #CD9969;
   font-weight: bold;
   text-align: center;
   font-size: 0.75rem;
@@ -93,7 +85,6 @@
 
 .confirmation-modal .contact-info {
   text-align: center;
-  color: #CD9969;
   font-size: 0.75rem;
 }
 
@@ -111,7 +102,7 @@
 }
 
 /* Responsive Design */
-@media (max-width: 640px) { /* Mobile */
+@media (max-width: 640px) {
   .confirmation-modal .ant-modal-content {
     width: 90%;
     max-width: 280px;
@@ -119,7 +110,7 @@
   .confirmation-modal h2 {
     font-size: 1rem;
   }
-  .confirmation-modal .booking-details p {
+  .confirmation-modal .maintenance-details p {
     font-size: 0.75rem;
   }
   .confirmation-modal .screenshot-notice {
@@ -130,7 +121,7 @@
   }
 }
 
-@media (min-width: 641px) and (max-width: 1024px) { /* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
   .confirmation-modal .ant-modal-content {
     width: 80%;
     max-width: 350px;

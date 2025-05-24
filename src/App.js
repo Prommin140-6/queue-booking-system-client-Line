@@ -3,20 +3,17 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import BookingPage from './pages/BookingPage';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
+import CheckStatusPage from './pages/CheckStatusPage';
 
 function App() {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(!!localStorage.getItem('token'));
 
-  // ตรวจสอบ token ใน localStorage และอัปเดตสถานะเมื่อมีการเปลี่ยนแปลง
   useEffect(() => {
     const handleStorageChange = () => {
       setIsAdminAuthenticated(!!localStorage.getItem('token'));
     };
 
-    // ฟังการเปลี่ยนแปลงใน localStorage (กรณี tab อื่นเปลี่ยน token)
     window.addEventListener('storage', handleStorageChange);
-
-    // ตรวจสอบครั้งแรกเมื่อโหลดหน้า
     handleStorageChange();
 
     return () => {
@@ -28,17 +25,14 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<BookingPage />} />
+        <Route path="/check-status" element={<CheckStatusPage />} />
         <Route
           path="/admin/login"
-          element={
-            isAdminAuthenticated ? <Navigate to="/admin" /> : <LoginPage />
-          }
+          element={isAdminAuthenticated ? <Navigate to="/admin" /> : <LoginPage />}
         />
         <Route
           path="/admin"
-          element={
-            isAdminAuthenticated ? <AdminPage /> : <Navigate to="/admin/login" />
-          }
+          element={isAdminAuthenticated ? <AdminPage /> : <Navigate to="/admin/login" />}
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
