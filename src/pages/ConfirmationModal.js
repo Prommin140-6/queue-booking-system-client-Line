@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { CameraOutlined } from '@ant-design/icons'; // เพิ่มไอคอนกล้องจาก Ant Design
 import logo from './ถึงแก่นLOGO.png';
 
 const ConfirmationModal = ({ open, onClose, details }) => {
@@ -30,7 +31,7 @@ const ConfirmationModal = ({ open, onClose, details }) => {
     });
   };
 
-  console.log('Modal details:', details); // Debug
+  console.log('Modal details:', details);
 
   const { text: statusText, color: statusColor } = getStatusTextAndColor(details?.status);
   const formattedDate = formatDate(details?.preferredDate);
@@ -65,8 +66,8 @@ const ConfirmationModal = ({ open, onClose, details }) => {
               </p>
             </div>
             <div className="screenshot-notice flex items-center justify-center mt-3">
-              <span className="mr-1">📸</span>
-              <p>กรุณาแคปหน้าจอนี้เพื่อใช้เป็นหลักฐาน</p>
+              <CameraOutlined className="mr-1" style={{ fontSize: '14px', color: '#CD9969' }} />
+              <span>กรุณาแคปหน้าจอนี้เพื่อใช้เป็นหลักฐาน</span>
             </div>
             <div className="contact-info mt-3 text-center">
               <p>หากมีปัญหา กรุณาติดต่อที่:</p>

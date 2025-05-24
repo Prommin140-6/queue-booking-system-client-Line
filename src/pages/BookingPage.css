@@ -49,7 +49,7 @@
 
 .confirmation-modal .ant-modal-body {
   padding: 16px;
-  color: #CD9969; /* ตั้งค่าสีเริ่มต้นสำหรับข้อความทั้งหมดใน Modal */
+  color: #CD9969;
 }
 
 .confirmation-modal h2 {
@@ -61,7 +61,7 @@
 .confirmation-modal .maintenance-details p,
 .confirmation-modal .screenshot-notice,
 .confirmation-modal .contact-info {
-  color: #CD9969 !important; /* ใช้ !important เพื่อครอบทับสไตล์เริ่มต้น */
+  color: #CD9969 !important;
 }
 
 .confirmation-modal .maintenance-details p span {
@@ -76,11 +76,15 @@
   font-weight: bold;
   text-align: center;
   font-size: 0.75rem;
+  display: flex; /* ให้แน่ใจว่าใช้ flex เพื่อจัดเรียงในบรรทัดเดียว */
+  align-items: center;
+  justify-content: center;
 }
 
-.confirmation-modal .screenshot-notice .anticon {
+.confirmation-modal .screenshot-notice span {
   color: #CD9969;
-  font-size: 14px;
+  font-size: 0.75rem; /* ปรับขนาดให้เท่ากับข้อความ */
+  line-height: 1; /* ป้องกันการขึ้นบรรทัดใหม่ */
 }
 
 .confirmation-modal .contact-info {
